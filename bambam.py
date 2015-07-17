@@ -43,15 +43,11 @@ def get_color():
 # Load image/, handling setting of the transparency color key
 def load_image(fullname, colorkey = None):
     try:
-        image = pygame.image.load(fullname)
+        image = pygame.image.load(fullname).convert_alpha()
     except pygame.error, message:
         print "Cannot load image:", fullname
         raise SystemExit, message
-    image = image.convert()
-    if colorkey is not None:
-        if colorkey is -1:
-            colorkey = image.get_at((0, 0))
-        image.set_colorkey(colorkey, RLEACCEL)
+
     return image
 
 
@@ -212,20 +208,25 @@ pygame.display.flip()
 mouse_down = False
 sound_muted = False
 
-def glob_data(pattern):
+def search_data(extensions):
+    if isinstance(extensions, basestring):
+        extensions = [extensions]
+
     fileList = []
     for dataDir in dataDirs:
-        fileList.extend(glob.glob(os.path.join(dataDir, pattern)))
+        for dirpath, dirnames, filenames in os.walk(dataDir):
+            for extension in extensions:
+                fileList.extend([os.path.join(dirpath, f) for f in filenames if f.endswith(extension)])
     return fileList
 
-sounds = load_items(glob_data('*.wav'), args.sound_blacklist, load_sound)
+sounds = load_items(search_data(['.wav', '.ogg']), args.sound_blacklist, load_sound)
 
 colors = ((  0,   0, 255), (255,   0,   0), (255, 255,   0), 
           (255,   0, 128), (  0,   0, 128), (  0, 255,   0), 
           (255, 128,   0), (255,   0, 255), (  0, 255, 255)
 )
 
-images = load_items(glob_data('*.gif'), args.image_blacklist, load_image)
+images = load_items(search_data(['.gif', '.png']), args.image_blacklist, load_image)
 
 quit_pos = 0
 
