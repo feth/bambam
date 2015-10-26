@@ -13,6 +13,8 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import division
+
 import pygame, sys,os, random, string, glob
 import argparse
 import fnmatch
@@ -44,9 +46,9 @@ def get_color():
 def load_image(fullname, colorkey = None):
     try:
         image = pygame.image.load(fullname).convert_alpha()
-    except pygame.error, message:
-        print "Cannot load image:", fullname
-        raise SystemExit, message
+    except pygame.error as message:
+        print("Cannot load image:"), fullname
+        raise SystemExit(message)
 
     return image
 
@@ -59,9 +61,9 @@ def load_sound(name):
         return NoneSound()
     try:
         sound = pygame.mixer.Sound(name)
-    except pygame.error, message:
-        print "Cannot load sound:", name
-        raise SystemExit, message
+    except pygame.error as message:
+        print("Cannot load sound:", name)
+        raise SystemExit(message)
     return sound
 
 
@@ -71,7 +73,7 @@ def load_items(lst, blacklist, load_function):
     global args
     for name in lst:
         if True in [fnmatch.fnmatch(name, p) for p in blacklist]:
-            print "Skipping blacklisted item:", name
+            print("Skipping blacklisted item:", name)
         else:
             result.append(load_function(name))
     return result
@@ -144,9 +146,10 @@ def print_image():
     h = random.randint(0, sheight - img.get_height())
     screen.blit(img, (w, h))
 
+
 # Is the key that was pressed alphanumeric
 def is_alpha(key):
-    return key < 255 and (chr(key) in string.letters or chr(key) in string.digits)
+    return key < 255 and (chr(key) in _LETTERS or chr(key) in string.digits)
 
 # Prints a letter at a random location
 def print_letter(key):
@@ -158,7 +161,7 @@ def print_letter(key):
         char = chr(key)
     text = font.render(char, 1, colors[random.randint(0, len(colors) - 1)])
     textpos = text.get_rect()
-    center = (textpos.width / 2, textpos.height / 2)
+    center = (textpos.width // 2, textpos.height // 2)
     w = random.randint(0 + center[0], swidth - center[0])
     h = random.randint(0 + center[1], sheight - center[1])
     textpos.centerx = w
@@ -173,8 +176,8 @@ parser.add_argument('--sound_blacklist', action='append', default=[], help='List
 parser.add_argument('--image_blacklist', action='append', default=[], help='List of image filename patterns to never show.')
 args = parser.parse_args()
 
-if not pygame.font: print 'Warning, fonts disabled'
-if not pygame.mixer: print 'Warning, sound disabled'
+if not pygame.font: print('Warning, fonts disabled')
+if not pygame.mixer: print('Warning, sound disabled')
  
 pygame.init()
 
@@ -183,7 +186,7 @@ dataDirs = [os.path.join(os.path.dirname(os.path.normpath(sys.argv[0])),'data')]
 xdg_data_home = os.getenv('XDG_DATA_HOME', os.path.expanduser("~/.local/share"))
 extraDataDir = os.path.join(xdg_data_home, "bambam/data/")
 if os.path.isdir(extraDataDir):
-    print "Extra data dir : ", extraDataDir
+    print("Extra data dir : ", extraDataDir)
     dataDirs.append(extraDataDir)
 
 
@@ -192,8 +195,8 @@ window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
 # determine display resolution
 displayinfo = pygame.display.Info()
-swidth = displayinfo.current_w
-sheight = displayinfo.current_h
+swidth = int(displayinfo.current_w)
+sheight = int(displayinfo.current_h)
 
 pygame.display.set_caption('Bam Bam') 
 screen = pygame.display.get_surface() 
@@ -208,8 +211,16 @@ pygame.display.flip()
 mouse_down = False
 sound_muted = False
 
+
+if sys.version_info[0] == 2:
+    _STRTYPE = basestring
+    _LETTERS = string.letters
+else:
+    _STRTYPE = str
+    _LETTERS = string.ascii_letters
+
 def search_data(extensions):
-    if isinstance(extensions, basestring):
+    if isinstance(extensions, _STRTYPE):
         extensions = [extensions]
 
     fileList = []
